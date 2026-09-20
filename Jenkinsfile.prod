@@ -13,23 +13,16 @@ pipeline {
 	stages {
 		stage('Build'){
 			steps {
-				echo "Build Stage"
+				echo "Build Stage - PROD Release"
 				sh "${cmd} staticCodeAnalysis -Dbda.targetEnv=BUILD"
 				junit allowEmptyResults: true, testResults: "${reportDir}/TEST-*.xml"
 				sh "${cmd} build -Dbda.targetEnv=BUILD"
 			}
 		}
-		stage('DeployToDev') {
+		stage('DeployToProd') {
 			steps {
-				echo "Deploy Stage - Target Local DEV (84.247.147.194:5599)"
-				sh "${cmd} deploy -Dbda.targetEnv=DEV"
-			}
-		}
-		stage('Test') {
-			steps {
-				echo "Executing WmTestSuite JUnit Tests on Local DEV"
-				sh "${cmd} test -Dbda.targetEnv=DEV"
-				junit "${reportDir}/TEST-*.xml"
+				echo "Deploy Stage - Target PROD (46.250.226.196:5555)"
+				sh "${cmd} deploy -Dbda.targetEnv=PROD"
 			}
 		}
 	}

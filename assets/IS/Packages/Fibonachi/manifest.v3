@@ -3,7 +3,8 @@
 <Values version="2.0">
   <value name="enabled">yes</value>
   <value name="system_package">no</value>
-  <value name="version">2.0</value>
+  <value name="version">2.1</value>
+  <value name="description">Fibonachi package - branch dev validation</value>
   <null name="startup_services"/>
   <null name="shutdown_services"/>
   <null name="replication_services"/>

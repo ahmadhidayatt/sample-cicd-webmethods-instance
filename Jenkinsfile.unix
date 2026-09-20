@@ -1,42 +1,47 @@
-/*
-* Copyright © 2010 - 2013 Apama Ltd.
-* Copyright © 2013 - 2018 Software AG, Darmstadt, Germany and/or its licensors
-*
-* SPDX-License-Identifier: Apache-2.0
-*
-*   Licensed under the Apache License, Version 2.0 (the "License");
-*   you may not use this file except in compliance with the License.
-*   You may obtain a copy of the License at
-*
-*       http://www.apache.org/licenses/LICENSE-2.0
-*
-*   Unless required by applicable law or agreed to in writing, software
-*   distributed under the License is distributed on an "AS IS" BASIS,
-*   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-*   See the License for the specific language governing permissions and
-*   limitations under the License.                                                            
-*
-*/
-
 pipeline {
-    agent any 
-
-    stages {
-        stage('Build'){
-            steps {
-                sh "${env.SAG_HOME}/common/lib/ant/bin/ant -DSAGHome=${env.SAG_HOME} -DSAG_CI_HOME=${env.SAG_CI_HOME} -DprojectName=${env.JOB_NAME} build"
-            }
-        }
-        stage('Deploy') {
-            steps {
-		sh "${env.SAG_HOME}/common/lib/ant/bin/ant -DSAGHome=${env.SAG_HOME} -DSAG_CI_HOME=${env.SAG_CI_HOME} -DprojectName=${env.JOB_NAME} deploy"
-            }
-        }
- 	stage('Test') {
-            steps {
-		sh "${env.SAG_HOME}/common/lib/ant/bin/ant -DSAGHome=${env.SAG_HOME} -DSAG_CI_HOME=${env.SAG_CI_HOME} -DprojectName=${env.JOB_NAME} test"
-		junit 'report/'
-            }
-        }
-    }
+	agent any
+	
+	environment {
+		// currentDir can be set to specific dir for non github testing 
+		currentDir = "."
+		fbrType = "local"
+		reportDir = "report"
+		// set ANT_HOME and overwrite any system set ANT_HOME var
+		ANT_HOME="${env.SAG_HOME}/common/AssetBuildEnvironment/ant"
+		ANT_OPTS = "-Dfile.encoding=UTF-8 --add-exports=java.xml/com.sun.org.apache.xpath.internal=ALL-UNNAMED --add-opens=java.xml/com.sun.org.apache.xpath.internal=ALL-UNNAMED --add-exports=java.xml/com.sun.org.apache.xpath.internal.objects=ALL-UNNAMED --add-opens=java.xml/com.sun.org.apache.xpath.internal.objects=ALL-UNNAMED"
+		cmd = "${ANT_HOME}/bin/ant -f ${currentDir}/build.xml -DSAGHome=${env.SAG_HOME} -DSAG_CI_HOME=${env.SAG_CI_HOME} -Dbda.projectName=${env.JOB_NAME} -Dconfig.build.fbr.type=${fbrType}"
+	}
+	
+	stages {
+		stage('Build'){
+			steps {
+			    echo "Build stage"
+				sh "${cmd} staticCodeAnalysis -Dbda.targetEnv=BUILD"
+				// empty results are allowed because isccr may be disabled
+				junit allowEmptyResults: true, testResults: "${reportDir}/TEST-*.xml"
+				sh "${cmd} build -Dbda.targetEnv=BUILD"
+			}
+		}
+		stage('DeployToDev') {
+			steps {
+			    echo "Deploy to DEV stage"
+				sh "${cmd} deploy -Dbda.targetEnv=DEV"
+			}
+		}
+		stage('DeployToTest') {
+			steps {
+			    echo "Deploy to TEST stage"
+				sh "${cmd} deploy -Dbda.targetEnv=TEST"
+				echo "Executing tests"
+				sh "${cmd} test -Dbda.targetEnv=TEST"
+				junit "${reportDir}/TEST-*.xml"
+			}
+		}
+		stage('QA') {
+			steps {
+			    echo "QA stage"
+				sh "${cmd} deploy -Dbda.targetEnv=QA"
+			}
+		}
+	}
 }

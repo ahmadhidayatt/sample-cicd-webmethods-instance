@@ -1,58 +1,62 @@
-<!--
- Copyright © 2010 - 2013 Apama Ltd.
- Copyright © 2013 - 2018 Software AG, Darmstadt, Germany and/or its licensors
-
- SPDX-License-Identifier: Apache-2.0
-
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
-
-       http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.                                                            
--->
-
 <?xml version="1.0"?>
-<project name="testBuild" default="buildDeployTest" basedir="." >
-        <!-- project.properties -->
-	<property file="project.properties"/>
-
-        <property name="workspace.dir" location="."/>
-
-        <!-- remap the VCS structure defined in project.properties to have absolute paths -->
-        <property name="isProjectsDir" location="${isPackages}"/>
-        <property name="isTestDir" location="${isTests}"/>
-        <property name="bpmProjectsDir" location="${bpmProjects}"/>
-        <property name="mwsProjectsDir" location="${mwsProjects}"/>
-        <property name="rulesProjectsDir" location="${rulesProjects}"/>
-        <property name="umProjectsDir" location="${umExport}"/>
-        
-        <property name="buildOutputDir" value="${workspace.dir}/target/${projectName}/build"/>
-        <property name="repositoryName" value="${projectName}Repo"/>
-        <property name="testPackageNamePattern" value="*_Test"/>
-        <property name="jenkinsReportDir" value="${workspace.dir}/report"/>
-
-
-	<target name="buildDeployTest" depends="">
-        	<ant dir="${SAG_CI_HOME}" antfile="${SAG_CI_HOME}/build.xml" target="buildDeployTest" inheritAll="true"/>
-	</target>
-
-        <target name="build" depends="">
-        	<ant dir="${SAG_CI_HOME}" antfile="${SAG_CI_HOME}/build.xml" target="build" inheritAll="true"/>
-	</target>
-
-        <target name="deploy" depends="">
-        	<ant dir="${SAG_CI_HOME}" antfile="${SAG_CI_HOME}/build.xml" target="deploy" inheritAll="true"/>
-	</target>
-
-        <target name="test" depends="">
-        	<ant dir="${SAG_CI_HOME}" antfile="${SAG_CI_HOME}/build.xml" target="test" inheritAll="true"/>
+<project name="testBuild" default="buildDeployTest" basedir=".">
+	<!-- project.properties -->
+	<property file="project.properties" />
+	
+	<property name="testPackageNamePattern" value="*_Test" />
+	
+	<target name="init.loadExternalProperties">
+		<description>Map externally defined environment variables prefixed with ext. to properties</description>
+		<property environment="env" />
+		<propertyset id="externalProperties">
+		  	<propertyref prefix="env.ext"/>
+			<mapper type="glob" from="env.ext.*" to="*"/>
+		</propertyset>
+	    <script language="javascript">
+	    	project.references.externalProperties.getProperties().forEach(function(key, value) {
+	    		project.setProperty(key, value);	    	
+	    	});
+	    </script>
 	</target>
 	
-</project>
+	<target name="init" depends="init.loadExternalProperties">
+		<echo message="---- init deployment" />
+		<echo message="---- Using deployment scripts from '${SAG_CI_HOME}'"/>
 
+		<!-- remap VCS structure to absolute paths -->
+		<property name="isProjectsDir" location="${config.assets.isPackages}" />
+		<property name="isTestDir" location="${config.assets.isTests}" />
+		<property name="bpmProjectsDir" location="${config.assets.bpmProjects}" />
+		<property name="mwsProjectsDir" location="${config.assets.mwsProjects}" />
+		<property name="rulesProjectsDir" location="${config.assets.rulesProjects}" />
+		<property name="umProjectsDir" location="${config.assets.umExport}" />
+		<property name="varsubDir" location="${config.deployer.varsubDir}" />
+		
+		<!-- Look for centralized ENV.groovy in SAG_CI_HOME (/opt/sagdevops-ci-assets), fallback to repo -->
+		<available file="${SAG_CI_HOME}/ENV.groovy" property="envFile" value="${SAG_CI_HOME}/ENV.groovy" />
+		<property name="envFile" value="${config.environments}" />
+		<property name="environmentsDefinition" location="${envFile}" />
+	</target>
+
+	<target name="buildDeployTest" depends="init">
+		<ant dir="${SAG_CI_HOME}" antfile="${SAG_CI_HOME}/build.xml" target="buildDeployTest" inheritAll="true" />
+	</target>
+
+	<target name="build" depends="init">
+		<echo message="---- starting build" />
+		<ant dir="${SAG_CI_HOME}" antfile="${SAG_CI_HOME}/build.xml" target="build" inheritAll="true" />
+	</target>
+
+	<target name="deploy" depends="init">
+		<ant dir="${SAG_CI_HOME}" antfile="${SAG_CI_HOME}/build.xml" target="deploy" inheritAll="true" />
+	</target>
+
+	<target name="staticCodeAnalysis" depends="init">
+		<ant dir="${SAG_CI_HOME}" antfile="${SAG_CI_HOME}/build.xml" target="staticCodeAnalysis" inheritAll="true" />
+	</target>
+
+	<target name="test" depends="init">
+		<ant dir="${SAG_CI_HOME}" antfile="${SAG_CI_HOME}/build.xml" target="test" inheritAll="true" />
+	</target>
+
+</project>

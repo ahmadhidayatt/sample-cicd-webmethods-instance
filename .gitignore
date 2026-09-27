@@ -1,0 +1,16 @@
+# IDE & Editors
+.vscode/
+.claude/
+.idea/
+*.swp
+*.bak
+
+# OS metadata
+Thumbs.db
+.DS_Store
+
+# Build artifacts & reports
+report/
+target/
+build/
+*.log

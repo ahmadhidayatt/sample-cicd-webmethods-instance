@@ -21,3 +21,5 @@ You can find additional information in the [Software AG Tech Community](https://
 ____________________
 Contact us at [Tech Community](mailto:technologycommunity@softwareag.com?subject=Github/SoftwareAG) if you have any questions.
 test
+
+add new line

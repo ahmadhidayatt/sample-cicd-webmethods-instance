@@ -21,7 +21,7 @@ pipeline {
 		}
 		stage('DeployToDev') {
 			steps {
-				echo "Deploy Stage - Target Local DEV (84.247.147.194:5599)"
+				echo "Deploy Stage - Target Local DEV (84.247.151.27:5555)"
 				sh "${cmd} deploy -Dbda.targetEnv=DEV"
 			}
 		}

@@ -17,7 +17,7 @@ environments {
 				host = System.getenv('PROD_IS_HOST') ?: "46.250.226.196"
 				port = System.getenv('PROD_IS_PORT') ?: "5555"
 				username = System.getenv('PROD_IS_USER') ?: "Administrator"
-				pwd = System.getenv('PROD_IS_PWD') ?: "m@n@g3"
+				pwd = System.getenv('PROD_IS_PWD') ?: "manage"
 			}
 		}
 	}

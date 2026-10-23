@@ -23,5 +23,4 @@ Contact us at [Tech Community](mailto:technologycommunity@softwareag.com?subject
 
 test
 
-add new line ok
-
+add new line ok as
